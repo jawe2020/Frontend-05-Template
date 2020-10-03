@@ -21,13 +21,8 @@
     <div id="board"></div>
 
     <script>
-      let pattern = [
-        [2, 2, 0],
-        [0, 1, 0],
-        [0, 0, 0],
-      ];
-
-      let color = 1;
+      let pattern = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      let color = 2;
 
       function show() {
         let board = document.getElementById("board");
@@ -37,7 +32,11 @@
             let cell = document.createElement("div");
             cell.classList.add("cell");
             cell.innerText =
-              pattern[i][j] === 2 ? "❌" : pattern[i][j] === 1 ? "⭕️" : "";
+              pattern[i * 3 + j] == 2
+                ? "❌"
+                : pattern[i * 3 + j] == 1
+                ? "⭕️"
+                : "";
             cell.addEventListener("click", () => move(i, j));
             board.appendChild(cell);
           }
@@ -46,90 +45,126 @@
       }
 
       function move(x, y) {
-        pattern[x][y] = color;
+        pattern[x * 3 + y] = color;
         if (check(pattern, color)) {
-          alert(color === 2 ? "❌ is winner!" : "⭕️ is winner!");
+          alert(color == 2 ? "❌ is winner" : "⭕️ is winner");
         }
         color = 3 - color;
         show();
-        if (willWin(pattern, color)) {
-          console.log(color === 2 ? "❌ will win!" : "⭕️ will win!");
-        }
+        computeMove();
       }
 
-      function check(pattern, color) {
-        // rows
-        for (let i = 0; i < 3; i++) {
-          let win = true;
-          for (let j = 0; j < 3; j++) {
-            if (pattern[i][j] !== color) {
-              win = false;
-            }
-          }
-          if (win) {
-            return true;
-          }
+      function computeMove(x, y) {
+        let choice = bestChioce(pattern, color);
+        if (choice.point) {
+          pattern[choice.point[0] * 3 + choice.point[1]] = color;
         }
-        // columns
-        for (let i = 0; i < 3; i++) {
-          let win = true;
-          for (let j = 0; j < 3; j++) {
-            if (pattern[j][i] !== color) {
-              win = false;
-            }
-          }
-          if (win) {
-            return true;
-          }
+        if (check(pattern, color)) {
+          alert(color == 2 ? "❌ is winner!" : "⭕️ is winner!");
         }
-        // \
-        {
-          let win = true;
-          for (let j = 0; j < 3; j++) {
-            if (pattern[j][j] !== color) {
-              win = false;
-            }
-          }
-          if (win) {
-            return true;
-          }
-        }
+        color = 3 - color;
+        show();
+      }
 
-        // /
-        {
-          let win = true;
-          for (let j = 0; j < 3; j++) {
-            if (pattern[j][2 - j] !== color) {
-              win = false;
-            }
-          }
-          if (win) {
-            return true;
-          }
-        }
-        return false;
+      function clone(pattern) {
+        return Object.create(pattern);
       }
 
       function willWin(pattern, color) {
         for (let i = 0; i < 3; i++) {
           for (let j = 0; j < 3; j++) {
-            if (pattern[i][j]) {
+            if (pattern[i * 3 + j]) {
               continue;
             }
             let tmp = clone(pattern);
-            tmp[i][j] = color;
+            tmp[i * 3 + j] = color;
             if (check(tmp, color)) {
-              return true;
+              return [i, j];
             }
           }
         }
-        return false;
+        return null;
       }
 
-      function clone(pattern) {
-        return JSON.parse(JSON.stringify(pattern));
+      function bestChioce(pattern, color) {
+        let point = willWin(pattern, color);
+        if (point) {
+          return {
+            point: point,
+            result: 1,
+          };
+        }
+        let result = -1;
+        outer: for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 3; j++) {
+            if (pattern[i * 3 + j]) {
+              continue;
+            }
+            let tmp = clone(pattern);
+            tmp[i * 3 + j] = color;
+            let opp = bestChioce(tmp, 3 - color);
+
+            if (-opp.result >= result) {
+              point = [i, j];
+              result = -opp.result;
+            }
+            if (result == 1) {
+              break outer;
+            }
+          }
+        }
+        return {
+          point: point,
+          result: point ? result : 0,
+        };
       }
 
+      function check(pattern, color) {
+        for (let i = 0; i < 3; i++) {
+          let win = true;
+          for (let j = 0; j < 3; j++) {
+            if (pattern[i * 3 + j] !== color) {
+              win = false;
+            }
+          }
+          if (win) {
+            return true;
+          }
+        }
+        for (let i = 0; i < 3; i++) {
+          let win = true;
+          for (let j = 0; j < 3; j++) {
+            if (pattern[j * 3 + i] !== color) {
+              win = false;
+            }
+          }
+          if (win) {
+            return true;
+          }
+        }
+        {
+          let win = true;
+          for (let j = 0; j < 3; j++) {
+            if (pattern[j * 3 + j] !== color) {
+              win = false;
+            }
+          }
+          if (win) {
+            return true;
+          }
+        }
+        {
+          let win = true;
+          for (let j = 0; j < 3; j++) {
+            if (pattern[j * 3 + 2 - j] !== color) {
+              win = false;
+            }
+          }
+          if (win) {
+            return true;
+          }
+        }
+      }
       show(pattern);
     </script>
   </body>
