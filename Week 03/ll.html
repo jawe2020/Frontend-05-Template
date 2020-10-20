@@ -2,20 +2,37 @@
   const regexp = /([0-9\.]+)|([ \t]+)|([\r\n]+)|(\*)|(\/)|(\+)|(\-)/g;
   const dic = ["Number", "Whitespace", "LineTerminator", "*", "/", "+", "-"];
 
-  function tokenize(source) {
+  function* tokenize(source) {
     let result = null;
+    let lastIdx = 0;
     while (true) {
+      lastIdx = regexp.lastIndex;
       result = regexp.exec(source);
       if (!result) break;
+
+      if (regexp.lastIndex - lastIdx > result[0].length) break; // undefined chars
+
+      let token = {
+        type: null,
+        value: null,
+      };
 
       for (let i = 1; i <= dic.length; i++) {
         if (result[i]) {
           console.log(dic[i - 1]);
+          token.type = dic[i - 1];
         }
       }
-      console.log(result);
+
+      token.value = result[0];
+      yield token;
     }
+    yield {
+      type: "EOF",
+    };
   }
 
-  tokenize("1024 + 10 * 25");
+  for (let token of tokenize("1024 + 10 * 25")) {
+    console.log(token);
+  }
 </script>
