@@ -11,6 +11,4 @@ Operator (+-\*/)
 Whitespace
 LineTerminator(\r \n)
 
-regexp
-
-()
+学习了 regex match and exec
